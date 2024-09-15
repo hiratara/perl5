@@ -11,7 +11,7 @@ BEGIN {
     @INC= "../lib";
 }
 
-plan(tests => 53);
+plan(tests => 55);
 
 {
     print <<'';   # Yow!
@@ -398,3 +398,18 @@ EOS
 like($@, qr/Can't find string terminator "$rhs" anywhere before EOF/,
      "Using too few closing delims in nesting fails as expected");
 is(@warnings, 0, "With no warnings generated");
+
+
+fresh_perl_like(
+    qq(use utf8; \xC2\xE3\x81\x82),
+    qr/^Malformed UTF-8 character:/,
+    {stderr => 1},
+    'Error handling for invalid UTF-8 sequences starting with leading bytes',
+);
+
+fresh_perl_like(
+    qq(use utf8; \xFF\xE3\x81\x82),
+    qr/^Malformed UTF-8 character:/,
+    {stderr => 1},
+    'Error handling for invalid UTF-8 sequences starting with unassigned bytes',
+);
